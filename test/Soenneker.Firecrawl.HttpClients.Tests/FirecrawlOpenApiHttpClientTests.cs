@@ -1,20 +1,19 @@
 using Soenneker.Firecrawl.HttpClients.Abstract;
-using Soenneker.Tests.FixturedUnit;
-using Xunit;
+using Soenneker.Tests.HostedUnit;
 
 namespace Soenneker.Firecrawl.HttpClients.Tests;
 
-[Collection("Collection")]
-public sealed class FirecrawlOpenApiHttpClientTests : FixturedUnitTest
+[ClassDataSource<Host>(Shared = SharedType.PerTestSession)]
+public sealed class FirecrawlOpenApiHttpClientTests : HostedUnitTest
 {
     private readonly IFirecrawlOpenApiHttpClient _httpclient;
 
-    public FirecrawlOpenApiHttpClientTests(Fixture fixture, ITestOutputHelper output) : base(fixture, output)
+    public FirecrawlOpenApiHttpClientTests(Host host) : base(host)
     {
         _httpclient = Resolve<IFirecrawlOpenApiHttpClient>(true);
     }
 
-    [Fact]
+    [Test]
     public void Default()
     {
 
