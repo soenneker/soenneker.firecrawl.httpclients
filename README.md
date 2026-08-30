@@ -1,43 +1,52 @@
 [![](https://img.shields.io/nuget/v/soenneker.firecrawl.httpclients.svg?style=for-the-badge)](https://www.nuget.org/packages/soenneker.firecrawl.httpclients/)
 [![](https://img.shields.io/github/actions/workflow/status/soenneker/soenneker.firecrawl.httpclients/publish-package.yml?style=for-the-badge)](https://github.com/soenneker/soenneker.firecrawl.httpclients/actions/workflows/publish-package.yml)
 [![](https://img.shields.io/nuget/dt/soenneker.firecrawl.httpclients.svg?style=for-the-badge)](https://www.nuget.org/packages/soenneker.firecrawl.httpclients/)
+[![](https://img.shields.io/github/actions/workflow/status/soenneker/soenneker.firecrawl.httpclients/codeql.yml?label=CodeQL&style=for-the-badge)](https://github.com/soenneker/soenneker.firecrawl.httpclients/actions/workflows/codeql.yml)
 
 # Soenneker.Firecrawl.HttpClients
 
-A .NET thread-safe singleton HttpClient for.
+A cached, authenticated `HttpClient` for Firecrawl's v2 API.
 
-## Install
+## Installation
 
 ```bash
 dotnet add package Soenneker.Firecrawl.HttpClients
 ```
 
-## Quick start
+## Registration
 
 ```csharp
 using Soenneker.Firecrawl.HttpClients.Registrars;
-using Microsoft.Extensions.DependencyInjection;
 
-var services = new ServiceCollection();
-var result = services.AddFirecrawlOpenApiHttpClientAsSingleton();
+services.AddFirecrawlOpenApiHttpClientAsSingleton();
 ```
 
-Adds `FirecrawlOpenApiHttpClient` as a singleton service.
+Keep the HTTP client wrapper singleton when it is consumed by scoped Firecrawl utilities. This lets utility scopes be disposed without tearing down the transport reused by later scopes.
 
-## What you get
+## Configuration
 
-- `IFirecrawlOpenApiHttpClient` — A .NET thread-safe singleton HttpClient for.
-- `FirecrawlOpenApiHttpClientRegistrar` — Registers the OpenAPI HttpClient wrapper for dependency injection.
+```json
+{
+  "Firecrawl": {
+    "ApiKey": "your-firecrawl-key"
+  }
+}
+```
 
-## API at a glance
+`Firecrawl:ApiKey` is required. The default base address is `https://api.firecrawl.dev/v2`, and authentication defaults to `Authorization: Bearer <key>`.
 
-| API | What it does | Result / important behavior |
-| --- | --- | --- |
-| `FirecrawlOpenApiHttpClientRegistrar.AddFirecrawlOpenApiHttpClientAsSingleton(services)` | Adds `FirecrawlOpenApiHttpClient` as a singleton service. | The same service collection, so additional registrations can be chained. |
-| `FirecrawlOpenApiHttpClientRegistrar.AddFirecrawlOpenApiHttpClientAsScoped(services)` | Adds `FirecrawlOpenApiHttpClient` as a scoped service. | The same service collection, so additional registrations can be chained. |
+Optional settings under `Firecrawl` are `ClientBaseUrl`, `AuthHeaderName`, and `AuthHeaderValueTemplate`; the template replaces `{token}` with the API key. A base-address override is useful for an application-controlled test server. Store the key in secret storage and redact authorization headers from logs.
 
-## Practical notes
+## Usage
 
-- Reuse the registered client instead of constructing one per operation.
-- Calls that return a cached or singleton value reuse the same instance until the owning service is disposed.
-- Dispose instances you own when their scope ends so held resources can be released.
+```csharp
+public sealed class FirecrawlTransport(IFirecrawlOpenApiHttpClient client)
+{
+    public ValueTask<HttpClient> Get(CancellationToken cancellationToken) =>
+        client.Get(cancellationToken);
+}
+```
+
+`Get()` initializes and returns the cached client. Callers do not own that `HttpClient` and must not dispose it. DI disposes the wrapper and removes the cached transport at the wrapper's lifetime boundary.
+
+This package configures transport and authentication only. It does not model Firecrawl requests, retry rate-limited calls, or enforce which URLs may be submitted for crawling.

@@ -6,14 +6,14 @@ using System.Threading;
 namespace Soenneker.Firecrawl.HttpClients.Abstract;
 
 /// <summary>
-/// A .NET thread-safe singleton HttpClient for 
+/// Provides the cached, authenticated HTTP client used to call Firecrawl.
 /// </summary>
 public interface IFirecrawlOpenApiHttpClient: IDisposable, IAsyncDisposable
 {
     /// <summary>
-    /// Returns the configured http Client used by the firecrawl open api http client.
+    /// Returns the cached HTTP client configured for Firecrawl.
     /// </summary>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
-    /// <returns>A task whose result is the requested http Client.</returns>
+    /// <returns>A task whose result is the shared HTTP client. The caller must not dispose it.</returns>
     ValueTask<HttpClient> Get(CancellationToken cancellationToken = default);
 }
