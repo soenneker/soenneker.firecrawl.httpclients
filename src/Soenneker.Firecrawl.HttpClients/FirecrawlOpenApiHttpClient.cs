@@ -15,6 +15,7 @@ public sealed class FirecrawlOpenApiHttpClient : IFirecrawlOpenApiHttpClient
 {
     private readonly IHttpClientCache _httpClientCache;
     private readonly IConfiguration _config;
+    private readonly string _cacheKey = $"{nameof(FirecrawlOpenApiHttpClient)}:{Guid.NewGuid():N}";
 
     private const string _prodBaseUrl = "https://api.firecrawl.dev/v2";
 
@@ -26,7 +27,7 @@ public sealed class FirecrawlOpenApiHttpClient : IFirecrawlOpenApiHttpClient
 
     public ValueTask<HttpClient> Get(CancellationToken cancellationToken = default)
     {
-        return _httpClientCache.Get(nameof(FirecrawlOpenApiHttpClient), (config: _config, baseUrl: _config["Firecrawl:ClientBaseUrl"] ?? _prodBaseUrl), static state =>
+        return _httpClientCache.Get(_cacheKey, (config: _config, baseUrl: _config["Firecrawl:ClientBaseUrl"] ?? _prodBaseUrl), static state =>
         {
             var apiKey = state.config.GetValueStrict<string>("Firecrawl:ApiKey");
             string authHeaderName = state.config["Firecrawl:AuthHeaderName"] ?? "Authorization";
@@ -44,20 +45,13 @@ public sealed class FirecrawlOpenApiHttpClient : IFirecrawlOpenApiHttpClient
         }, cancellationToken);
     }
 
-    /// <summary>
-    /// Releases resources used by the current instance.
-    /// </summary>
     public void Dispose()
     {
-        _httpClientCache.RemoveSync(nameof(FirecrawlOpenApiHttpClient));
+        _httpClientCache.RemoveSync(_cacheKey);
     }
 
-    /// <summary>
-    /// Asynchronously releases resources used by the current instance.
-    /// </summary>
-    /// <returns>A task that represents the asynchronous operation.</returns>
     public ValueTask DisposeAsync()
     {
-        return _httpClientCache.Remove(nameof(FirecrawlOpenApiHttpClient));
+        return _httpClientCache.Remove(_cacheKey);
     }
 }

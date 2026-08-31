@@ -47,6 +47,6 @@ public sealed class FirecrawlTransport(IFirecrawlOpenApiHttpClient client)
 }
 ```
 
-`Get()` initializes and returns the cached client. Callers do not own that `HttpClient` and must not dispose it. DI disposes the wrapper and removes the cached transport at the wrapper's lifetime boundary.
+`Get()` initializes and returns the client owned by the provider. Callers must not dispose that `HttpClient` directly. Disposing the provider removes its exact cache entry; scoped provider instances cannot tear down another scope's transport.
 
 This package configures transport and authentication only. It does not model Firecrawl requests, retry rate-limited calls, or enforce which URLs may be submitted for crawling.
