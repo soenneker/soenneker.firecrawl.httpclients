@@ -11,6 +11,7 @@ using Soenneker.Utils.HttpClientCache.Abstract;
 
 namespace Soenneker.Firecrawl.HttpClients;
 
+/// <inheritdoc cref="IFirecrawlOpenApiHttpClient" />
 public sealed class FirecrawlOpenApiHttpClient : IFirecrawlOpenApiHttpClient
 {
     private readonly IHttpClientCache _httpClientCache;
