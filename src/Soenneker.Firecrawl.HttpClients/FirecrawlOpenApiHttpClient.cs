@@ -30,7 +30,7 @@ public sealed class FirecrawlOpenApiHttpClient : IFirecrawlOpenApiHttpClient
     {
         return _httpClientCache.Get(_cacheKey, (config: _config, baseUrl: _config["Firecrawl:ClientBaseUrl"] ?? _prodBaseUrl), static state =>
         {
-            var apiKey = state.config.GetValueStrict<string>("Firecrawl:ApiKey");
+            var apiKey = state.config.GetStringStrict("Firecrawl:ApiKey");
             string authHeaderName = state.config["Firecrawl:AuthHeaderName"] ?? "Authorization";
             string authHeaderValueTemplate = state.config["Firecrawl:AuthHeaderValueTemplate"] ?? "Bearer {token}";
             string authHeaderValue = authHeaderValueTemplate.Replace("{token}", apiKey, StringComparison.Ordinal);
